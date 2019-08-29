@@ -1,6 +1,6 @@
 //
 //  Collection.swift
-//  SwiftUITest
+//  Collection
 //
 //  Created by Carson Katri on 8/28/19.
 //  Copyright © 2019 Carson Katri. All rights reserved.
@@ -85,7 +85,7 @@ struct Collection<Item, Cell>: UIViewRepresentable where Cell: View {
     private let spacing: CGFloat
     private let alignment: Alignment?
     
-    init(_ items: [Item], itemSize: CGSize, spacing: CGFloat, inset: UIEdgeInsets = .zero, @ViewBuilder _ cellContent: @escaping (Item) -> Cell) {
+    init(_ items: [Item], itemSize: CGSize, spacing: CGFloat, inset: UIEdgeInsets, @ViewBuilder _ cellContent: @escaping (Item) -> Cell) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = nil
@@ -119,28 +119,8 @@ struct Collection<Item, Cell>: UIViewRepresentable where Cell: View {
     }
 }
 
-/*struct Collection<Row>: View where Row: View {
-    let rowContent: () -> Row
-    
-    init(@ViewBuilder _ rowContent: @escaping () -> Row) {
-        self.rowContent = rowContent
-    }
-    
-    var body: some View {
-        HStack {
-            rowContent()
-        }
-    }
-}*/
-
 struct Collection_Previews: PreviewProvider {
     static var previews: some View {
-//        Collection(["Hello", "World!", "This", "is", "a", "cool", "test"], itemSize: CGSize(width: 300, height: 100)) { text in
-//            Text(text)
-//                .padding()
-//                .background(Color.primary.opacity(0.1))
-//                .cornerRadius(5)
-//        }
         Collection(["Hello", "World!", "This", "is", "a", "cool", "test"], itemSize: CGSize(width: 300, height: 100), spacing: 0, alignment: .leading) { text in
             Text(text)
                 .padding(5)
