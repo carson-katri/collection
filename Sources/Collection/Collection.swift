@@ -121,11 +121,14 @@ struct Collection<Item, Cell>: UIViewRepresentable where Cell: View {
 
 struct Collection_Previews: PreviewProvider {
     static var previews: some View {
-        Collection(["Hello", "World!", "This", "is", "a", "cool", "test"], itemSize: CGSize(width: 300, height: 100), spacing: 0, alignment: .leading) { text in
+        Collection(["Hello", "World", "this", "is", "a", "test"], itemSize: CGSize(width: 120, height: 50), spacing: 5) { text in
             Text(text)
-                .padding(5)
-                .background(Color.gray)
+                .lineLimit(1)
+                .padding(.leading, 5)
+                .frame(width: 120, height: 50, alignment: .leading)
+                .background(Color.primary.opacity(0.1))
                 .cornerRadius(5)
         }
+        .padding(5)
     }
 }
