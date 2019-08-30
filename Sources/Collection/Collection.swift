@@ -83,13 +83,13 @@ private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UI
     }
 }
 
-struct CollectionView: UIViewRepresentable {
+public struct CollectionView: UIViewRepresentable {
     private let delegate: CollectionDelegate<AnyView>
     private let itemSize: CGSize
     private let spacing: CGFloat
     private let alignment: Alignment?
     
-    init<Cell, Item>(_ items: [Item], itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, inset: UIEdgeInsets, @ViewBuilder _ cellContent: @escaping (Item) -> Cell) where Cell: View {
+    public init<Cell, Item>(_ items: [Item], itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, inset: UIEdgeInsets, @ViewBuilder _ cellContent: @escaping (Item) -> Cell) where Cell: View {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = nil
@@ -98,7 +98,7 @@ struct CollectionView: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing, inset: inset)
     }
     
-    init<Cell, Item>(_ items: [Item], itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cellContent: @escaping (Item) -> Cell) where Cell: View {
+    public init<Cell, Item>(_ items: [Item], itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cellContent: @escaping (Item) -> Cell) where Cell: View {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
@@ -107,7 +107,7 @@ struct CollectionView: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing, alignment: alignment)
     }
     
-    init<Cell>(_ items: ClosedRange<Int>, itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cellContent: @escaping (Int) -> Cell) where Cell: View {
+    public init<Cell>(_ items: ClosedRange<Int>, itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cellContent: @escaping (Int) -> Cell) where Cell: View {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
@@ -116,7 +116,7 @@ struct CollectionView: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing, alignment: alignment)
     }
     
-    init<A: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> A) {
+    public init<A: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> A) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
@@ -125,7 +125,7 @@ struct CollectionView: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing)
     }
     
-    init<A: View, B: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B)>) {
+    public init<A: View, B: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
@@ -135,7 +135,7 @@ struct CollectionView: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing)
     }
     
-    init<A: View, B: View, C: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C)>) {
+    public init<A: View, B: View, C: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
@@ -145,7 +145,7 @@ struct CollectionView: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing)
     }
     
-    init<A: View, B: View, C: View, D: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D)>) {
+    public init<A: View, B: View, C: View, D: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
@@ -155,7 +155,7 @@ struct CollectionView: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing)
     }
     
-    init<A: View, B: View, C: View, D: View, E: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E)>) {
+    public init<A: View, B: View, C: View, D: View, E: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
@@ -165,7 +165,7 @@ struct CollectionView: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing)
     }
     
-    init<A: View, B: View, C: View, D: View, E: View, F: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F)>) {
+    public init<A: View, B: View, C: View, D: View, E: View, F: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
@@ -175,7 +175,7 @@ struct CollectionView: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing)
     }
     
-    init<A: View, B: View, C: View, D: View, E: View, F: View, G: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G)>) {
+    public init<A: View, B: View, C: View, D: View, E: View, F: View, G: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
@@ -185,7 +185,7 @@ struct CollectionView: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing)
     }
     
-    init<A: View, B: View, C: View, D: View, E: View, F: View, G: View, H: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G, H)>) {
+    public init<A: View, B: View, C: View, D: View, E: View, F: View, G: View, H: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G, H)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
@@ -195,7 +195,7 @@ struct CollectionView: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing)
     }
     
-    init<A: View, B: View, C: View, D: View, E: View, F: View, G: View, H: View, I: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G, H, I)>) {
+    public init<A: View, B: View, C: View, D: View, E: View, F: View, G: View, H: View, I: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G, H, I)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
@@ -205,7 +205,7 @@ struct CollectionView: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing)
     }
     
-    init<A: View, B: View, C: View, D: View, E: View, F: View, G: View, H: View, I: View, J: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G, H, I, J)>) {
+    public init<A: View, B: View, C: View, D: View, E: View, F: View, G: View, H: View, I: View, J: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G, H, I, J)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
@@ -215,7 +215,7 @@ struct CollectionView: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing)
     }
     
-    init<Cell, Item, ID>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> ForEach<Item, ID, Cell>) where Cell: View {
+    public init<Cell, Item, ID>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, @ViewBuilder _ cells: () -> ForEach<Item, ID, Cell>) where Cell: View {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
@@ -225,7 +225,7 @@ struct CollectionView: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing)
     }
     
-    func makeUIView(context: UIViewRepresentableContext<CollectionView>) -> UICollectionView {
+    public func makeUIView(context: UIViewRepresentableContext<CollectionView>) -> UICollectionView {
         var layout = UICollectionViewFlowLayout()
         if self.alignment == .leading {
             layout = CollectionViewLeftAlignFlowLayout()
@@ -236,7 +236,7 @@ struct CollectionView: UIViewRepresentable {
         return UICollectionView(frame: .zero, collectionViewLayout: layout)
     }
     
-    func updateUIView(_ uiView: UICollectionView, context: UIViewRepresentableContext<CollectionView>) {
+    public func updateUIView(_ uiView: UICollectionView, context: UIViewRepresentableContext<CollectionView>) {
         uiView.sizeToFit()
         uiView.backgroundColor = .clear
         uiView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "HostingCell")
