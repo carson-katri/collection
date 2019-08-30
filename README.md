@@ -13,3 +13,21 @@ Collection(["Hello", "World", "this", "is", "a", "test"], itemSize: CGSize(width
 }
 .padding(5)
 ```
+
+There are other ways to create a `Collection`:
+```swift
+Collection {
+    Text("Hello")
+    Text("World")
+}
+
+Collection(0...5) { item in
+    Text("\(item)")
+}
+
+Collection {
+    ForEach(0...5) { item in
+        Text("\(item)")
+    }
+}
+```
