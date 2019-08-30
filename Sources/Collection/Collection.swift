@@ -83,7 +83,7 @@ private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UI
     }
 }
 
-struct Collection: UIViewRepresentable {
+struct CollectionView: UIViewRepresentable {
     private let delegate: CollectionDelegate<AnyView>
     private let itemSize: CGSize
     private let spacing: CGFloat
@@ -225,7 +225,7 @@ struct Collection: UIViewRepresentable {
         }, itemSize: itemSize, spacing: spacing)
     }
     
-    func makeUIView(context: UIViewRepresentableContext<Collection>) -> UICollectionView {
+    func makeUIView(context: UIViewRepresentableContext<CollectionView>) -> UICollectionView {
         var layout = UICollectionViewFlowLayout()
         if self.alignment == .leading {
             layout = CollectionViewLeftAlignFlowLayout()
@@ -236,7 +236,7 @@ struct Collection: UIViewRepresentable {
         return UICollectionView(frame: .zero, collectionViewLayout: layout)
     }
     
-    func updateUIView(_ uiView: UICollectionView, context: UIViewRepresentableContext<Collection>) {
+    func updateUIView(_ uiView: UICollectionView, context: UIViewRepresentableContext<CollectionView>) {
         uiView.sizeToFit()
         uiView.backgroundColor = .clear
         uiView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "HostingCell")
