@@ -9,7 +9,7 @@
 import SwiftUI
 
 private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout where Cell: View {
-    let items: [Any]
+    var items: [Any]
     let cellContent: (Any) -> Cell
     let itemSize: CGSize
     let spacing: CGFloat
@@ -23,6 +23,11 @@ private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UI
     
     func collectionView(_ collectionView: UICollectionView, canMoveItemAt indexPath: IndexPath) -> Bool {
         reorderable
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, moveItemAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        let temp = items.remove(at: sourceIndexPath.item)
+        items.insert(temp, at: destinationIndexPath.item)
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -240,7 +245,10 @@ public struct CollectionView: UIViewRepresentable {
         layout.itemSize = itemSize
         layout.minimumLineSpacing = spacing
         layout.minimumInteritemSpacing = spacing
-        return UICollectionView(frame: .zero, collectionViewLayout: layout)
+        let view = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        /*view.dragInteractionEnabled = self.delegate.reorderable
+        view.dragDelegate = self.delegate*/
+        return view
     }
     
     public func updateUIView(_ uiView: UICollectionView, context: UIViewRepresentableContext<CollectionView>) {
