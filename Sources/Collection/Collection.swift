@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout where Cell: View {
+private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UICollectionViewDragDelegate, UICollectionViewDropDelegate where Cell: View {
     var items: [Any]
     let cellContent: (Any) -> Cell
     let itemSize: CGSize
@@ -21,13 +21,53 @@ private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UI
         items.count
     }
     
-    func collectionView(_ collectionView: UICollectionView, canMoveItemAt indexPath: IndexPath) -> Bool {
+    /*func collectionView(_ collectionView: UICollectionView, canMoveItemAt indexPath: IndexPath) -> Bool {
         reorderable
     }
     
     func collectionView(_ collectionView: UICollectionView, moveItemAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
         let temp = items.remove(at: sourceIndexPath.item)
         items.insert(temp, at: destinationIndexPath.item)
+    }*/
+    
+    func collectionView(_ collectionView: UICollectionView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
+        let item = self.items[indexPath.item]
+        let itemProvider = NSItemProvider(object: NSString(string: "\(item)"))
+        let dragItem = UIDragItem(itemProvider: itemProvider)
+        dragItem.localObject = item
+        return [dragItem]
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, dropSessionDidUpdate session: UIDropSession, withDestinationIndexPath destinationIndexPath: IndexPath?) -> UICollectionViewDropProposal {
+        if collectionView.hasActiveDrag {
+            return UICollectionViewDropProposal(operation: .move, intent: .insertAtDestinationIndexPath)
+        }
+        return UICollectionViewDropProposal(operation: .forbidden)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, performDropWith coordinator: UICollectionViewDropCoordinator) {
+        var destination: IndexPath
+        if let indexPath = coordinator.destinationIndexPath {
+            destination = indexPath
+        } else {
+            let row = collectionView.numberOfItems(inSection: 0)
+            destination = IndexPath(item: row - 1, section: 0)
+        }
+        
+        if coordinator.proposal.operation == .move {
+            reorderItems(coordinator: coordinator, destination: destination, collectionView: collectionView)
+        }
+    }
+    
+    fileprivate func reorderItems(coordinator: UICollectionViewDropCoordinator, destination: IndexPath, collectionView: UICollectionView) {
+        if let item = coordinator.items.first, let source = item.sourceIndexPath {
+            collectionView.performBatchUpdates({
+                let deleted = self.items.remove(at: source.item)
+                self.items.insert(deleted, at: destination.item)
+                collectionView.deleteItems(at: [source])
+                collectionView.insertItems(at: [destination])
+            }, completion: nil)
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -246,8 +286,8 @@ public struct CollectionView: UIViewRepresentable {
         layout.minimumLineSpacing = spacing
         layout.minimumInteritemSpacing = spacing
         let view = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        /*view.dragInteractionEnabled = self.delegate.reorderable
-        view.dragDelegate = self.delegate*/
+        view.dragInteractionEnabled = self.delegate.reorderable
+        view.dragDelegate = self.delegate
         return view
     }
     
