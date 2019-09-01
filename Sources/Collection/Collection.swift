@@ -288,6 +288,7 @@ public struct CollectionView: UIViewRepresentable {
         let view = UICollectionView(frame: .zero, collectionViewLayout: layout)
         view.dragInteractionEnabled = self.delegate.reorderable
         view.dragDelegate = self.delegate
+        view.dropDelegate = self.delegate
         return view
     }
     
