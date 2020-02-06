@@ -10,7 +10,7 @@ import SwiftUI
 
 private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UICollectionViewDragDelegate, UICollectionViewDropDelegate where Cell: View {
     var items: [Any]
-    let cellContent: (Any) -> Cell
+    let cellContent: (Any, Int) -> Cell
     let itemSize: CGSize
     let spacing: CGFloat
     let inset: UIEdgeInsets?
@@ -72,7 +72,7 @@ private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UI
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "HostingCell", for: indexPath)
-        let view = UIHostingController(rootView: cellContent(items[indexPath.item])).view!
+        let view = UIHostingController(rootView: cellContent(items[indexPath.item], indexPath.item)).view!
         view.frame = cell.bounds
         cell.contentView.addSubview(view)
         return cell
@@ -110,10 +110,10 @@ private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UI
         return .zero
     }
     
-    init<Item>(items: [Item], cellContent: @escaping (Item) -> Cell, itemSize: CGSize, spacing: CGFloat = 0, inset: UIEdgeInsets, reorderable: Bool) {
+    init<Item>(items: [Item], cellContent: @escaping (Item, Int) -> Cell, itemSize: CGSize, spacing: CGFloat = 0, inset: UIEdgeInsets, reorderable: Bool) {
         self.items = items
-        self.cellContent = { item in
-            cellContent(item as! Item)
+        self.cellContent = { item, index in
+            cellContent(item as! Item, index)
         }
         self.itemSize = itemSize
         self.spacing = spacing
@@ -122,10 +122,10 @@ private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UI
         self.reorderable = reorderable
     }
     
-    init<Item>(items: [Item], cellContent: @escaping (Item) -> Cell, itemSize: CGSize, spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool) {
+    init<Item>(items: [Item], cellContent: @escaping (Item, Int) -> Cell, itemSize: CGSize, spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool) {
         self.items = items
-        self.cellContent = { item in
-            cellContent(item as! Item)
+        self.cellContent = { item, index in
+            cellContent(item as! Item, index)
         }
         self.itemSize = itemSize
         self.spacing = spacing
@@ -141,30 +141,30 @@ public struct CollectionView: UIViewRepresentable {
     private let spacing: CGFloat
     private let alignment: Alignment?
     
-    public init<Cell, Item>(_ items: [Item], itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, inset: UIEdgeInsets, reorderable: Bool = false, @ViewBuilder _ cellContent: @escaping (Item) -> Cell) where Cell: View {
+    public init<Cell, Item>(_ items: [Item], itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, inset: UIEdgeInsets, reorderable: Bool = false, @ViewBuilder _ cellContent: @escaping (Item, Int) -> Cell) where Cell: View {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = nil
-        self.delegate = CollectionDelegate(items: items, cellContent: { item in
-            AnyView(cellContent(item))
+        self.delegate = CollectionDelegate(items: items, cellContent: { item, index in
+            AnyView(cellContent(item, index))
         }, itemSize: itemSize, spacing: spacing, inset: inset, reorderable: reorderable)
     }
     
-    public init<Cell, Item>(_ items: [Item], itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cellContent: @escaping (Item) -> Cell) where Cell: View {
+    public init<Cell, Item>(_ items: [Item], itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cellContent: @escaping (Item, Int) -> Cell) where Cell: View {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
-        self.delegate = CollectionDelegate(items: items, cellContent: { item in
-            AnyView(cellContent(item))
+        self.delegate = CollectionDelegate(items: items, cellContent: { item, index in
+            AnyView(cellContent(item, index))
         }, itemSize: itemSize, spacing: spacing, alignment: alignment, reorderable: reorderable)
     }
     
-    public init<Cell>(_ items: ClosedRange<Int>, itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cellContent: @escaping (Int) -> Cell) where Cell: View {
+    public init<Cell>(_ items: ClosedRange<Int>, itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cellContent: @escaping (Int, Int) -> Cell) where Cell: View {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
-        self.delegate = CollectionDelegate(items: Array(items), cellContent: { item in
-            AnyView(cellContent(item))
+        self.delegate = CollectionDelegate(items: Array(items), cellContent: { item, index in
+            AnyView(cellContent(item, index))
         }, itemSize: itemSize, spacing: spacing, alignment: alignment, reorderable: reorderable)
     }
     
@@ -172,7 +172,7 @@ public struct CollectionView: UIViewRepresentable {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
-        self.delegate = CollectionDelegate(items: [AnyView(cells())], cellContent: { view in
+        self.delegate = CollectionDelegate(items: [AnyView(cells())], cellContent: { view, _ in
             view
         }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
     }
@@ -182,7 +182,7 @@ public struct CollectionView: UIViewRepresentable {
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
-        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1)], cellContent: { view in
+        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1)], cellContent: { view, _ in
             view
         }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
     }
@@ -192,7 +192,7 @@ public struct CollectionView: UIViewRepresentable {
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
-        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2)], cellContent: { view in
+        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2)], cellContent: { view, _ in
             view
         }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
     }
@@ -202,7 +202,7 @@ public struct CollectionView: UIViewRepresentable {
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
-        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3)], cellContent: { view in
+        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3)], cellContent: { view, _ in
             view
         }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
     }
@@ -212,7 +212,7 @@ public struct CollectionView: UIViewRepresentable {
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
-        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4)], cellContent: { view in
+        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4)], cellContent: { view, _ in
             view
         }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
     }
@@ -222,7 +222,7 @@ public struct CollectionView: UIViewRepresentable {
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
-        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5)], cellContent: { view in
+        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5)], cellContent: { view, _ in
             view
         }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
     }
@@ -232,7 +232,7 @@ public struct CollectionView: UIViewRepresentable {
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
-        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5), AnyView(extracted.6)], cellContent: { view in
+        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5), AnyView(extracted.6)], cellContent: { view, _ in
             view
         }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
     }
@@ -242,7 +242,7 @@ public struct CollectionView: UIViewRepresentable {
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
-        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5), AnyView(extracted.6), AnyView(extracted.7)], cellContent: { view in
+        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5), AnyView(extracted.6), AnyView(extracted.7)], cellContent: { view, _ in
             view
         }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
     }
@@ -252,7 +252,7 @@ public struct CollectionView: UIViewRepresentable {
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
-        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5), AnyView(extracted.6), AnyView(extracted.7), AnyView(extracted.8)], cellContent: { view in
+        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5), AnyView(extracted.6), AnyView(extracted.7), AnyView(extracted.8)], cellContent: { view, _ in
             view
         }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
     }
@@ -262,7 +262,7 @@ public struct CollectionView: UIViewRepresentable {
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
-        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5), AnyView(extracted.6), AnyView(extracted.7), AnyView(extracted.8), AnyView(extracted.9)], cellContent: { view in
+        self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5), AnyView(extracted.6), AnyView(extracted.7), AnyView(extracted.8), AnyView(extracted.9)], cellContent: { view, _ in
             view
         }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
     }
@@ -272,7 +272,7 @@ public struct CollectionView: UIViewRepresentable {
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells()
-        self.delegate = CollectionDelegate(items: extracted.data.map { AnyView(extracted.content($0)) }, cellContent: { view in
+        self.delegate = CollectionDelegate(items: extracted.data.map { AnyView(extracted.content($0)) }, cellContent: { view, _ in
             view
         }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
     }
