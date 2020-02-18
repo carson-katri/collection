@@ -16,6 +16,7 @@ private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UI
     let inset: UIEdgeInsets?
     let alignment: Alignment
     let reorderable: Bool
+    let onReorder: ([Any]) -> Void
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         items.count
@@ -66,7 +67,9 @@ private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UI
                 self.items.insert(deleted, at: destination.item)
                 collectionView.deleteItems(at: [source])
                 collectionView.insertItems(at: [destination])
-            }, completion: nil)
+            }) { _ in
+                self.onReorder(self.items)
+            }
         }
     }
     
@@ -110,7 +113,7 @@ private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UI
         return .zero
     }
     
-    init<Item>(items: [Item], cellContent: @escaping (Item, Int) -> Cell, itemSize: CGSize, spacing: CGFloat = 0, inset: UIEdgeInsets, reorderable: Bool) {
+    init<Item>(items: [Item], cellContent: @escaping (Item, Int) -> Cell, itemSize: CGSize, spacing: CGFloat = 0, inset: UIEdgeInsets, reorderable: Bool, onReorder: @escaping ([Item]) -> Void) {
         self.items = items
         self.cellContent = { item, index in
             cellContent(item as! Item, index)
@@ -120,9 +123,12 @@ private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UI
         self.inset = inset
         self.alignment = .center
         self.reorderable = reorderable
+        self.onReorder = { items in
+            onReorder(items.map { $0 as! Item })
+        }
     }
     
-    init<Item>(items: [Item], cellContent: @escaping (Item, Int) -> Cell, itemSize: CGSize, spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool) {
+    init<Item>(items: [Item], cellContent: @escaping (Item, Int) -> Cell, itemSize: CGSize, spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool, onReorder: @escaping ([Item]) -> Void) {
         self.items = items
         self.cellContent = { item, index in
             cellContent(item as! Item, index)
@@ -132,6 +138,9 @@ private class CollectionDelegate<Cell>: NSObject, UICollectionViewDataSource, UI
         self.alignment = alignment
         self.inset = .zero
         self.reorderable = reorderable
+        self.onReorder = { items in
+            onReorder(items.map { $0 as! Item })
+        }
     }
 }
 
@@ -141,141 +150,142 @@ public struct CollectionView: UIViewRepresentable {
     private let spacing: CGFloat
     private let alignment: Alignment?
     
-    public init<Cell, Item>(_ items: [Item], itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, inset: UIEdgeInsets, reorderable: Bool = false, @ViewBuilder _ cellContent: @escaping (Item, Int) -> Cell) where Cell: View {
+    public init<Cell, Item>(_ items: [Item], itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, inset: UIEdgeInsets, reorderable: Bool = false, onReorder: @escaping ([Item]) -> Void, @ViewBuilder _ cellContent: @escaping (Item, Int) -> Cell) where Cell: View {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = nil
         self.delegate = CollectionDelegate(items: items, cellContent: { item, index in
             AnyView(cellContent(item, index))
-        }, itemSize: itemSize, spacing: spacing, inset: inset, reorderable: reorderable)
+        }, itemSize: itemSize, spacing: spacing, inset: inset, reorderable: reorderable, onReorder: onReorder)
     }
     
-    public init<Cell, Item>(_ items: [Item], itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cellContent: @escaping (Item, Int) -> Cell) where Cell: View {
+    public init<Cell, Item>(_ items: [Item], itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, onReorder: @escaping ([Item]) -> Void, @ViewBuilder _ cellContent: @escaping (Item, Int) -> Cell) where Cell: View {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
         self.delegate = CollectionDelegate(items: items, cellContent: { item, index in
             AnyView(cellContent(item, index))
-        }, itemSize: itemSize, spacing: spacing, alignment: alignment, reorderable: reorderable)
+        }, itemSize: itemSize, spacing: spacing, alignment: alignment, reorderable: reorderable, onReorder: onReorder)
     }
     
-    public init<Cell>(_ items: ClosedRange<Int>, itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cellContent: @escaping (Int, Int) -> Cell) where Cell: View {
+    public init<Cell>(_ items: ClosedRange<Int>, itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, onReorder: @escaping ([Any]) -> Void, @ViewBuilder _ cellContent: @escaping (Int, Int) -> Cell) where Cell: View {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
         self.delegate = CollectionDelegate(items: Array(items), cellContent: { item, index in
             AnyView(cellContent(item, index))
-        }, itemSize: itemSize, spacing: spacing, alignment: alignment, reorderable: reorderable)
+        }, itemSize: itemSize, spacing: spacing, alignment: alignment, reorderable: reorderable, onReorder: onReorder)
     }
     
-    public init<A: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cells: () -> A) {
+    public init<A: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, onReorder: @escaping ([Any]) -> Void, @ViewBuilder _ cells: () -> A) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
         self.delegate = CollectionDelegate(items: [AnyView(cells())], cellContent: { view, _ in
             view
-        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
+        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable, onReorder: onReorder)
     }
     
-    public init<A: View, B: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cells: () -> TupleView<(A, B)>) {
+    public init<A: View, B: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, onReorder: @escaping ([Any]) -> Void, @ViewBuilder _ cells: () -> TupleView<(A, B)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
         self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1)], cellContent: { view, _ in
             view
-        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
+        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable, onReorder: onReorder)
     }
     
-    public init<A: View, B: View, C: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cells: () -> TupleView<(A, B, C)>) {
+    public init<A: View, B: View, C: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, onReorder: @escaping ([Any]) -> Void, @ViewBuilder _ cells: () -> TupleView<(A, B, C)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
         self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2)], cellContent: { view, _ in
             view
-        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
+        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable, onReorder: onReorder)
     }
     
-    public init<A: View, B: View, C: View, D: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D)>) {
+    public init<A: View, B: View, C: View, D: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, onReorder: @escaping ([Any]) -> Void, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
         self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3)], cellContent: { view, _ in
             view
-        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
+        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable, onReorder: onReorder)
     }
     
-    public init<A: View, B: View, C: View, D: View, E: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E)>) {
+    public init<A: View, B: View, C: View, D: View, E: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, onReorder: @escaping ([Any]) -> Void, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
         self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4)], cellContent: { view, _ in
             view
-        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
+        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable, onReorder: onReorder)
     }
     
-    public init<A: View, B: View, C: View, D: View, E: View, F: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F)>) {
+    public init<A: View, B: View, C: View, D: View, E: View, F: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, onReorder: @escaping ([Any]) -> Void, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
         self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5)], cellContent: { view, _ in
             view
-        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
+        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable, onReorder: onReorder)
     }
     
-    public init<A: View, B: View, C: View, D: View, E: View, F: View, G: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G)>) {
+    public init<A: View, B: View, C: View, D: View, E: View, F: View, G: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, onReorder: @escaping ([Any]) -> Void, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
         self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5), AnyView(extracted.6)], cellContent: { view, _ in
             view
-        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
+        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable, onReorder: onReorder)
     }
     
-    public init<A: View, B: View, C: View, D: View, E: View, F: View, G: View, H: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G, H)>) {
+    public init<A: View, B: View, C: View, D: View, E: View, F: View, G: View, H: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, onReorder: @escaping ([Any]) -> Void, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G, H)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
         self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5), AnyView(extracted.6), AnyView(extracted.7)], cellContent: { view, _ in
             view
-        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
+        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable, onReorder: onReorder)
     }
     
-    public init<A: View, B: View, C: View, D: View, E: View, F: View, G: View, H: View, I: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G, H, I)>) {
+    public init<A: View, B: View, C: View, D: View, E: View, F: View, G: View, H: View, I: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, onReorder: @escaping ([Any]) -> Void, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G, H, I)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
         self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5), AnyView(extracted.6), AnyView(extracted.7), AnyView(extracted.8)], cellContent: { view, _ in
             view
-        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
+        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable, onReorder: onReorder)
     }
     
-    public init<A: View, B: View, C: View, D: View, E: View, F: View, G: View, H: View, I: View, J: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G, H, I, J)>) {
+    public init<A: View, B: View, C: View, D: View, E: View, F: View, G: View, H: View, I: View, J: View>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, onReorder: @escaping ([Any]) -> Void, @ViewBuilder _ cells: () -> TupleView<(A, B, C, D, E, F, G, H, I, J)>) {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells().value
         self.delegate = CollectionDelegate(items: [AnyView(extracted.0), AnyView(extracted.1), AnyView(extracted.2), AnyView(extracted.3), AnyView(extracted.4), AnyView(extracted.5), AnyView(extracted.6), AnyView(extracted.7), AnyView(extracted.8), AnyView(extracted.9)], cellContent: { view, _ in
             view
-        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
+        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable, onReorder: onReorder)
     }
     
-    public init<Cell, Item, ID>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, @ViewBuilder _ cells: () -> ForEach<Item, ID, Cell>) where Cell: View {
+    /*public init<Cell, Item, ID>(itemSize: CGSize = CGSize(width: 100, height: 100), spacing: CGFloat = 0, alignment: Alignment = .leading, reorderable: Bool = false, onReorder: @escaping ([Item]) -> Void, @ViewBuilder _ cells: () -> ForEach<Item, ID, Cell>) where Cell: View {
         self.itemSize = itemSize
         self.spacing = spacing
         self.alignment = alignment
         let extracted = cells()
-        self.delegate = CollectionDelegate(items: extracted.data.map { AnyView(extracted.content($0)) }, cellContent: { view, _ in
-            view
-        }, itemSize: itemSize, spacing: spacing, reorderable: reorderable)
-    }
+        //self.delegate = CollectionDelegate(items: extracted.data.map { AnyView(extracted.content($0)) }, cellContent: { view, _ in
+            //view
+        //}, itemSize: itemSize, spacing: spacing, reorderable: reorderable, onReorder: onReorder)
+        self.delegate = CollectionDelegate<AnyView>(items: extracted.data.map { AnyView(extracted.content($0)) }, cellContent: { view, _ in view}, itemSize: itemSize, spacing: spacing, reorderable: reorderable, onReorder: onReorder)
+    }*/
     
     public func makeUIView(context: UIViewRepresentableContext<CollectionView>) -> UICollectionView {
         var layout = UICollectionViewFlowLayout()
